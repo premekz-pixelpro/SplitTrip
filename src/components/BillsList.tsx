@@ -1,5 +1,5 @@
 import { useEventStore } from "@/store/useEventStore";
-import { BillItem } from "@/components/billItem"
+import { BillItem } from "@/components/BillItem"
 import { useEffect } from "react";
 
 export const BillsList = () => {
