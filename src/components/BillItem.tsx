@@ -1,33 +1,45 @@
 import { Bill } from '@/types/types';
+import { useAuthStore } from '@/store/useAuthStore';
 
 interface BillItemProps {
-    bill: Bill; 
+  bill: Bill;
 }
-export const BillItem: React.FC<BillItemProps> = ({ bill
-}) => {
-    const participants = bill.participants
-    const getShareColor = (share: number) => {
-        if (share > 0) return 'green';
-        if (share < 0) return 'red';
-        return 'black';
-      };
+export const BillItem: React.FC<BillItemProps> = ({ bill }) => {
+  const currentUser = useAuthStore((state) => state.user);
+  const currentUserId = currentUser ? currentUser.uid : '';
+  const participants = bill.participants;
+  const paidAmount = bill.participants.reduce((sum, p) => {
+    return sum + (p.hasPaid && !p.creator ? p.share || 0 : 0);
+  }, 0);
+  // console.log("paidAmount", bill.value - paidAmount);
+  const creatoridToDisplayName = (creatorId: string) => {
+    const participant = participants.find((participant) => participant.userId === creatorId);
+    return participant ? participant.displayName : creatorId;
+  };
 
-    return (
-        <div className="bill-item">
-            <h3>{bill.title}</h3>
-            <p>Value: {bill.value}</p>
-            {/* <p>Created At: {createdAt.toDate().toLocaleString()}</p> */}
-            <div className="participants">
-                {participants.map(participant => (
-                    <div key={participant.userId} className="participant">
-                        <img src={participant.image || `https://ui-avatars.com/api/?name=${participant.displayName}`} alt={participant.displayName} />
-                        <h4>{participant.displayName}</h4>
-                        <p>{participant.creator ? 'Yes' : 'No'}</p>
-                        <p style={{color: getShareColor(participant.share)}}>Share: {participant.share}</p>
-                        <p>Has Paid: {participant.hasPaid ? 'Yes' : 'No'}</p>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-}
+  // const getShareColor = (share: number) => {
+  //     if (share > 0) return 'green';
+  //     if (share < 0) return 'red';
+  //     return 'black';
+  //   };
+
+  const yourShare =
+    participants.find((participant) => participant.userId === currentUserId)?.share || 0;
+
+  return (
+    <div className="expense-card mb-2">
+      <h3 className="pb-2 font-medium">
+        {bill.title} {bill.value} zł
+      </h3>
+      <p>
+        {bill.creatorId === currentUserId
+          ? `Zapłaciłeś`
+          : `${creatoridToDisplayName(bill.creatorId)} zapłacił`}{' '}
+        {bill.value - paidAmount} zł
+      </p>
+      <p className={yourShare > 0 ? 'positive' : 'negative'}>
+        {yourShare ? 'Twój udział ' + yourShare + ' zł' : 'Brak udziału'}
+      </p>
+    </div>
+  );
+};

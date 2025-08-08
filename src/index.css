@@ -1,3 +1,8 @@
+@import "tailwindcss";
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
+
 :root {
   --color-lightest: #fff4e6;
   --color-light: #ffe8cc;
@@ -7,31 +12,107 @@
 }
 
 * {
-  margin: 0;
-  padding: 0;
+
   box-sizing: border-box;
 }
 
-html {
-  font-size: 62.5%;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-}
+
 
 body {
-  height: 100vh;
+  min-height: 100vh;
   color: #495057;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  
 }
 
 .app {
-  min-height: 66vh;
+  min-height: 100vh; 
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.app-header {
+  position: relative;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
   display: flex;
-  grid-template-columns: 54rem 64rem;
-  column-gap: 4rem;
-  align-items: start;
+  justify-content: center;
+  align-items: center;
+  padding: 1.6rem 2.4rem;
+  background-color: var(--color-lightest);
+  border-bottom: 1px solid var(--color-light);
+}
+
+.content-area {
+  padding: 1rem;
+  overflow-y: auto;
+  margin-bottom: 60px; 
+}
+
+.summary-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+.expenses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.expense-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+.bottom-nav-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: var(--color-medium);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 -1px 3px rgba(0,0,0,0.12);
+}
+
+.action-button {
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: #4285f4;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transform: translateY(-20px);
+}
+
+
+
+.user-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.positive {
+  color: #66a80f;
+}
+.negative {
+  color: #e03131;
 }
 
 .button {
@@ -112,7 +193,7 @@ body {
   color: #e03131;
 }
 
-form {
+/* form {
   font-size: 1.6rem;
   display: grid;
   align-items: center;
@@ -120,7 +201,7 @@ form {
 
   background-color: var(--color-lightest);
   border-radius: 7px;
-}
+} */
 
 .form-add-friend {
   grid-template-columns: 1fr 1.5fr;
@@ -128,8 +209,7 @@ form {
   padding: 1.2rem;
 }
 .form-split-bill {
-  grid-template-columns: 1fr 12rem;
-  padding: 3.2rem 4rem;
+  flex: auto;
 }
 
 label {
@@ -146,7 +226,7 @@ input,
 select {
   font-family: inherit;
   color: inherit;
-  font-size: 1.5rem;
+  /* font-size: 1.5rem; */
   padding: 0.7rem;
   text-align: center;
   border: 1px solid var(--color-light);
@@ -177,19 +257,19 @@ form h2 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-left: 1rem;
+  /* margin-left: 1rem; */
 }
 
 .participant-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
   padding: 0.5rem;
 }
 
-input[type="radio"] {
+/* input[type="radio"] {
   margin: 0;
-}
+} */
 
 .bill-item {
   display: flex;
@@ -203,3 +283,4 @@ input[type="radio"] {
   align-items: center;
   gap: 1rem;
 }
+

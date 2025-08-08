@@ -1,37 +1,82 @@
+import { useEffect, useState } from 'react';
+import { Event } from './types/types';
+import { db } from '@/config/firebase';
+import { Unsubscribe, doc, onSnapshot } from 'firebase/firestore';
 import { LoginForm } from '@/components/LoginForm';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useEventStore } from '@/store/useEventStore';
 import { EventSelector } from '@/components/EventSelector';
-import { FriendsList, NewBill, BillsList } from '@/components';
+import { SummaryCard, FriendsList, NewBill, BillsList, Modal, Button } from '@/components';
+import '@/styles/App.css';
 
 export const App = () => {
-  const user = useAuthStore(state => state.user);
-  const currentEvent = useEventStore(state => state.currentEvent);
-  
+  const currentEventId = useEventStore((state) => state.currentEvent?.id);
+  // Pobierz potrzebne akcje
+  const handleSnapshotUpdate = useEventStore((state) => state.handleSnapshotUpdate);
+  const handleSnapshotError = useEventStore((state) => state.handleSnapshotError);
+  const handleSnapshotNotFound = useEventStore((state) => state.handleSnapshotNotFound);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    console.log(isModalOpen);
+    let unsubscribe: Unsubscribe | null = null;
+
+    if (currentEventId) {
+      const eventRef = doc(db, 'events', currentEventId);
+      unsubscribe = onSnapshot(
+        eventRef,
+        (docSnap) => {
+          if (docSnap.exists()) {
+            const updatedEventData = { id: docSnap.id, ...docSnap.data() } as Event;
+            handleSnapshotUpdate(updatedEventData);
+          } else {
+            handleSnapshotNotFound();
+          }
+        },
+        (error) => {
+          handleSnapshotError(error.message);
+        }
+      );
+    }
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [currentEventId, handleSnapshotUpdate, handleSnapshotError, handleSnapshotNotFound]);
+
+  const user = useAuthStore((state) => state.user);
+  const currentEvent = useEventStore((state) => state.currentEvent);
+
   if (!user) {
     return <LoginForm />;
+  }
+  // console.log("currentEventId", user);
+
+  if (!currentEvent) {
+    return (
+      <div className="app">
+        <div className="app-header">
+          <EventSelector />
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="app">
-      <EventSelector />
-      {currentEvent ? (
-        <>
-        <FriendsList />       
-        <NewBill />
+      <div className="app-header">
+        <h3>{currentEvent.title}</h3>
+      </div>
+      <div className="content-area">
+        <SummaryCard />
         <BillsList />
-        </>
-        ) : (
-        <>
-        <p>Please select an event to continue</p>
-        <div>Welcome, {user.email}!</div>
-        </>
-        )
-      }
-        <div className="footer">
-          <p>Hello {user.displayName}</p>
-        </div>
+        <Button className="new-bill-button" onClick={() => setIsModalOpen(true)}>
+          +
+        </Button>
+        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+          <NewBill />
+        </Modal>
+      </div>
+      <div className="bottom-nav-bar">Footer</div>
     </div>
   );
 };
-

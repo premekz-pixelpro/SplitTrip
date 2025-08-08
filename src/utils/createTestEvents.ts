@@ -6,12 +6,12 @@ interface TestEvent {
   description: string;
   creatorId: string;
   participants: EventParticipant[];
+  balances?: Record<string, number>;
 }
 
 interface EventParticipant {
   userId: string;
   displayName: string;
-  balance: number;
 }
 
 const testEvents: TestEvent[] = [
@@ -46,18 +46,27 @@ const createEvents = async () => {
       throw new Error('Could not find all required users');
     }
 
-    // Set creators and participants with displayName and initial balance
+    // Set creators and participants with displayNames
     testEvents[0].creatorId = john.id;
+    testEvents[0].balances = {
+      [john.id]: 0,
+      [jane.id]: 0,
+      [bob.id]: 0
+    };
     testEvents[0].participants = [
-      { userId: john.id, displayName: john.displayName, balance: 0 },
-      { userId: jane.id, displayName: jane.displayName, balance: 0 },
-      { userId: bob.id, displayName: bob.displayName, balance: 0 }
+      { userId: john.id, displayName: john.displayName },
+      { userId: jane.id, displayName: jane.displayName },
+      { userId: bob.id, displayName: bob.displayName }
     ];
 
     testEvents[1].creatorId = jane.id;
+    testEvents[1].balances = {
+      [jane.id]: 0,
+      [bob.id]: 0
+    };
     testEvents[1].participants = [
-      { userId: jane.id, displayName: jane.displayName, balance: 0 },
-      { userId: bob.id, displayName: bob.displayName, balance: 0 }
+      { userId: jane.id, displayName: jane.displayName },
+      { userId: bob.id, displayName: bob.displayName }
     ];
 
     // Create events in Firestore

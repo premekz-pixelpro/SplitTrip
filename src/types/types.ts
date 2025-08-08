@@ -10,6 +10,7 @@ export interface Event {
   participants:  EventParticipant[];
   totalExpenses: number;
   eventBills: Bill[];
+  balances: Record<string, number>; // Klucz to userId, wartość to saldo
 }
 
 export interface EventParticipant {
@@ -37,6 +38,17 @@ export interface Bill {
     shareType: 'equal' | 'fixed';
     creator: boolean;
   }[];
+}
+
+export interface User {
+  id: string;
+  displayName: string;
+  email: string;
+  image?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  balance: number;
+  friends: User[];
 }
 
 export interface BillParticipant {

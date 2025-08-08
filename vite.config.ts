@@ -1,19 +1,30 @@
 import { defineConfig } from 'vite'
+import tailwindcss from '@tailwindcss/vite'
+
 import react from '@vitejs/plugin-react'
 import path from 'path';
 import fs from 'fs';
 
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    tailwindcss(),
+  ],
   server: {
     https: {
-      key: fs.readFileSync(path.resolve(__dirname, 'localhost+2-key.pem')),
-      cert: fs.readFileSync(path.resolve(__dirname, 'localhost+2.pem')),
+      key: fs.readFileSync(path.resolve(__dirname, 'home.pixelpro.pl-key.pem')),
+      cert: fs.readFileSync(path.resolve(__dirname, 'home.pixelpro.pl.pem')),
     },
-    host: 'localhost',
+    host: 'home.pixelpro.pl',
     port: 3000, // lub inny, jeśli potrzebujesz
+    hmr: {
+      host: 'home.pixelpro.pl',
+      port: 3000,
+      protocol: 'wss'
+    }
   },
+  
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),

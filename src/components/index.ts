@@ -8,3 +8,4 @@ export * from "./Modal";
 export * from "./EventSelector";
 export * from "./BillItem";
 export * from "./BillsList";
+export * from "./SummaryCard";

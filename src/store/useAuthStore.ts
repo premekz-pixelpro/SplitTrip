@@ -3,7 +3,8 @@ import {
   User,
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
-  signOut
+  signOut,
+  onAuthStateChanged,
 } from 'firebase/auth';
 import { auth, db } from '@/config/firebase';
 import { FirebaseUser } from '@/types/types';
@@ -35,6 +36,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
       set({ loading: true });
       const userRef = doc(db, "users", userId);
       const userSnapshot = await getDoc(userRef);
+
       
       if (userSnapshot.exists()) {
         const userData = {
@@ -69,11 +71,14 @@ export const useAuthStore = create<AuthStore>((set) => ({
     try {
       set({ loading: true, error: null });
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const loggedInUser = userCredential.user;
       set({ user: userCredential.user });
+      await useAuthStore.getState().fetchUserData(loggedInUser.uid);
+      
+      set({ loading: false });
+
     } catch (error) {
       set({ error: (error as Error).message });
-    } finally {
-      set({ loading: false });
     }
   },
 
@@ -86,3 +91,14 @@ export const useAuthStore = create<AuthStore>((set) => ({
     }
   }
 }));
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    // Użytkownik jest zalogowany
+    useAuthStore.setState({ user });
+    // Pobierz dane użytkownika z Firestore
+    await useAuthStore.getState().fetchUserData(user.uid);
+  } else {
+    // Użytkownik jest wylogowany
+    useAuthStore.setState({ user: null, userData: null });
+  }
+});

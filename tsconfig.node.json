@@ -25,7 +25,7 @@
     },
 
     /* Bundler mode */
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": false,
     "isolatedModules": true,
     "moduleDetection": "force",

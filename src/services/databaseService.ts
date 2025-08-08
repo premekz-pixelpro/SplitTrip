@@ -1,10 +1,11 @@
 import { db } from '@/config/firebase';
 import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
-import type { User, Bill } from '@/types/types';
+import type { User , Bill } from '@/types/types';
 
 export const collections = {
   users: collection(db, 'users'),
   bills: collection(db, 'bills'),
+  events: collection(db, 'events'),
   friendships: collection(db, 'friendships')
 };
 

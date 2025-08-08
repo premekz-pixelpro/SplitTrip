@@ -14,7 +14,7 @@
     },
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "allowJs": true,
     "strict": true

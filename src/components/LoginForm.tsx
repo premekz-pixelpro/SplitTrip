@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
+import '@/styles/components/LoginForm.css';
 
 export const LoginForm = () => {
   const { signIn, loading, error } = useAuthStore();
@@ -14,12 +15,8 @@ export const LoginForm = () => {
   return (
     <form onSubmit={handleSubmit} className="login-form">
       <h2>Login</h2>
-      
-      {error && (
-        <div className="error-message">
-          {error}
-        </div>
-      )}
+
+      {error && <div className="error-message">{error}</div>}
 
       <div className="form-group">
         <label htmlFor="email">Email</label>

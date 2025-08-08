@@ -1,10 +1,10 @@
 
-/* #root {
+#root {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
-} */
+}
 
 .logo {
   height: 6em;
@@ -63,20 +63,4 @@
 
 .friend-item .add-button {
   margin-left: auto;
-}
-
-.new-bill-button {
-  position: fixed;
-  bottom: 6rem;
-  right: 1rem;
-  size: 56px;
-  /* font-size: 1.2rem; */
-  background-color: #61dafb;
-  color: #282c34;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-}
-.new-bill-button:hover {
-  background-color: #21a1f1;
 }
