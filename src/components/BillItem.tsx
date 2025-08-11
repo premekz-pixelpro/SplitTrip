@@ -31,6 +31,7 @@ export const BillItem: React.FC<BillItemProps> = ({ bill }) => {
       <h3 className="pb-2 font-medium">
         {bill.title} {bill.value} zł
       </h3>
+      <p>{bill.createdAt.toDate().toLocaleDateString()}</p>
       <p>
         {bill.creatorId === currentUserId
           ? `Zapłaciłeś`

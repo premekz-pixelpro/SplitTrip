@@ -4,29 +4,35 @@ import { useAuthStore } from '@/store/useAuthStore';
 import classNames from 'classnames';
 
 export const SummaryCard = () => {
-  const { currentEvent, participants, fetchParticipants, getCurrentUserDetails } = useEventStore();
-  const currentUser = useAuthStore((state) => state.user);
+  const { currentEvent } = useEventStore();
+  const currentUser = useAuthStore((state) => state.userData);
 
-  useEffect(() => {
-    if (currentEvent) {
-      fetchParticipants();
-    }
-  }, [currentEvent]);
+  // useEffect(() => {
+  //   if (currentEvent) {
+  //     fetchParticipants();
+  //   }
+  // }, [currentEvent]);
 
-  const currentUserDetails = currentUser ? getCurrentUserDetails(currentUser.uid) : null;
+  //getCurrentUserDetails niepotrzebne do przebudowy i wywalenia
+  // console.log('currentEvent', currentEvent?.participants);
+
   const currentUserId = currentUser ? currentUser.uid : '';
-  // console.log("currentUserDetails", currentEvent?.balances[currentUserId]);
+  const participants = currentEvent?.participants || [];
 
-  if (!currentEvent) return null;
+  // const currentUserDetails = currentUser ? getCurrentUserDetails(currentUser.uid) : null;
+  // console.log('currentUserDetails', currentUser);
+  // console.log('getCurrent', currentUserDetails);
+
+  // if (!currentEvent) return null;
 
   return (
     <div className={classNames('summary-card flex justify-between')}>
       <div className="">
         <h2 className="pb-4 text-red-300">Podsumowanie</h2>
-        <h3 className="text-2xl font-bold">{currentUserDetails?.displayName}</h3>
-        <p className="">Łączna kwota: {currentEvent.totalExpenses} zł</p>
+        <h3 className="text-2xl font-bold">{currentUser?.displayName}</h3>
+        <p className="">Łączna kwota: {currentEvent?.totalExpenses} zł</p>
         <p>Uczestnicy: {participants.length}</p>
-        {currentUserDetails && (
+        {currentUser && (
           <p className="balance-info">
             {`Twoje saldo: `}
             <span
@@ -41,7 +47,7 @@ export const SummaryCard = () => {
           </p>
         )}
       </div>
-      <img src={currentUserDetails?.image} alt="user avatar" className="user-avatar" />
+      <img src={currentUser?.image} alt="user avatar" className="user-avatar" />
     </div>
   );
 };

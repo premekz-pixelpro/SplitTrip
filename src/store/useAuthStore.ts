@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import { 
+import {
   User,
-  createUserWithEmailAndPassword, 
+  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
@@ -34,16 +34,15 @@ export const useAuthStore = create<AuthStore>((set) => ({
   fetchUserData: async (userId: string) => {
     try {
       set({ loading: true });
-      const userRef = doc(db, "users", userId);
+      const userRef = doc(db, 'users', userId);
       const userSnapshot = await getDoc(userRef);
 
-      
       if (userSnapshot.exists()) {
         const userData = {
           uid: userId,
-          displayName: userSnapshot.data().displayName || "Unknown User",
-          email: userSnapshot.data().email || "",
-          image: userSnapshot.data().image || "",
+          displayName: userSnapshot.data().displayName || 'Unknown User',
+          email: userSnapshot.data().email || '',
+          image: userSnapshot.data().image || '',
           balance: userSnapshot.data().balance || 0,
         };
         set({ userData });
@@ -74,9 +73,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
       const loggedInUser = userCredential.user;
       set({ user: userCredential.user });
       await useAuthStore.getState().fetchUserData(loggedInUser.uid);
-      
-      set({ loading: false });
 
+      set({ loading: false });
     } catch (error) {
       set({ error: (error as Error).message });
     }
@@ -89,7 +87,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
     } catch (error) {
       set({ error: (error as Error).message });
     }
-  }
+  },
 }));
 onAuthStateChanged(auth, async (user) => {
   if (user) {

@@ -4,13 +4,13 @@ import { useEffect, useState } from 'react';
 import { billService } from '@/services/databaseService';
 
 export const BillsList = () => {
-  const [sortBy, setSortBy] = useState<string>('date');
+  const [sortBy, setSortBy] = useState<string>('dateNewest');
   const { eventBills, fetchBills, loading } = useEventStore();
   const currentEvent = useEventStore((state) => state.currentEvent);
   const currentUser = useAuthStore((state) => state.user);
   const currentUserId = currentUser ? currentUser.uid : '';
 
-  console.log('curentUserId', currentUserId);
+  // console.log('curentUserId', currentUserId);
 
   const sortedBills = [...eventBills].sort((a, b) => {
     switch (sortBy) {
@@ -41,8 +41,8 @@ export const BillsList = () => {
         <div>No bills available</div>
       ) : (
         <>
-          <h2 className="pb-4 text-red-300">Lista rachunków</h2>
-          <select
+          <h2 className="pb-4 text-red-300">Lista 5 ostatnich rachunków</h2>
+          {/* <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as string)}
             className="p-2 rounded border"
@@ -50,10 +50,9 @@ export const BillsList = () => {
             <option value="dateNewest">Najnowsze</option>
             <option value="dateOldest">Najstarsze</option>
             <option value="value">Wartość</option>
-            {/* <option value="creator">Twórca</option> */}
-          </select>
+          </select> */}
           <ul className="bills-list">
-            {sortedBills.map((bill) => (
+            {sortedBills.slice(0, 5).map((bill) => (
               <BillItem key={bill.id} bill={bill} />
             ))}
           </ul>

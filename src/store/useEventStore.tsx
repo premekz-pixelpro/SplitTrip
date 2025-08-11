@@ -4,6 +4,7 @@ import {
   collection,
   getDocs,
   updateDoc,
+  addDoc,
   doc,
   serverTimestamp,
   Timestamp,
@@ -34,7 +35,7 @@ interface EventStore {
   fetchEvents: () => Promise<void>;
   fetchBills: (eventId: string) => Promise<void>;
   setCurrentEvent: (event: Event | null) => void;
-  createEvent: (title: string, description: string, creatorId: string) => Promise<void>;
+  createEvent: (title: string, description: string, creatorId: string) => Promise<Event>;
   addParticipant: (eventId: string, user: FirebaseUser) => Promise<void>;
   getCurrentUserDetails: (userId: string) => FirebaseUser | null;
   updateTotalExpenses: (eventId: string, billAmount: number) => Promise<void>;
@@ -45,6 +46,7 @@ interface EventStore {
   handleSnapshotUpdate: (updatedEventData: Event) => void;
   handleSnapshotError: (errorMessage: string) => void;
   handleSnapshotNotFound: () => void;
+  addParticipantToEvent: (newParticipant: FirebaseUser) => Promise<FirebaseUser>;
 }
 
 export const useEventStore = create<EventStore>((set, get) => ({
@@ -80,28 +82,47 @@ export const useEventStore = create<EventStore>((set, get) => ({
     set({ currentEvent: event });
   },
 
-  createEvent: async (title: string, description: string, creatorId: string) => {
+  createEvent: async (title, description, creatorId) => {
     set({ loading: true, error: null });
     try {
-      const newEvent: Event = {
-        id: '',
+      const eventData = {
         title,
-        eventBills: [],
-        totalExpenses: 0,
-        updatedAt: serverTimestamp() as Event['updatedAt'],
         description,
         creatorId,
         participants: [],
-        createdAt: serverTimestamp() as Event['createdAt'],
         balances: {},
+        totalExpenses: 0,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       };
-      // Add logic to save the event to Firestore
-      set((state) => ({ events: [...state.events, newEvent], loading: false }));
+
+      //  - zapisz do Firestore
+      const docRef = await addDoc(collection(db, 'events'), eventData);
+      console.log('Event created with ID:', docRef.id);
+
+      // Utwórz pełny obiekt eventu z ID
+      const newEvent: Event = {
+        id: docRef.id,
+        ...eventData,
+        createdAt: eventData.createdAt as Event['createdAt'],
+        updatedAt: eventData.updatedAt as Event['updatedAt'],
+        eventBills: [], // Add this line to satisfy the Event type
+      };
+
+      // Dodaj do lokalnego stanu
+      set((state) => ({
+        events: [...state.events, newEvent],
+        loading: false,
+      }));
+
+      return newEvent;
     } catch (err) {
+      console.error('Error creating event:', err);
       set({
         error: err instanceof Error ? err.message : 'Error creating event',
         loading: false,
       });
+      throw err;
     }
   },
 
@@ -223,6 +244,7 @@ export const useEventStore = create<EventStore>((set, get) => ({
     set({ loading: true });
     try {
       const participantIds = currentEvent.participants.map((p) => p.userId);
+      // console.log('Participant IDs:', participantIds);
 
       const usersRef = collection(db, 'users');
       const q = query(usersRef, where('uid', 'in', participantIds));
@@ -361,5 +383,30 @@ export const useEventStore = create<EventStore>((set, get) => ({
       participants: [],
       error: 'Event not found or deleted.',
     });
+  },
+  addParticipantToEvent: async (newParticipant) => {
+    try {
+      const eventId = get().currentEvent?.id;
+      if (!eventId) throw new Error('Brak aktywnego wydarzenia');
+
+      // Dodaj do Firebase
+      const participantRef = doc(db, 'events', eventId, 'participants', newParticipant.uid);
+      await doc(participantRef, {
+        ...newParticipant,
+        joinedAt: new Date(),
+        status: 'active',
+        inviteStatus: newParticipant.phone ? 'invited' : 'added_manually',
+      });
+
+      // Dodaj do lokalnego state
+      set((state) => ({
+        participants: [...state.participants, newParticipant],
+      }));
+
+      return newParticipant;
+    } catch (error) {
+      console.error('Error adding participant to event:', error);
+      throw error;
+    }
   },
 }));

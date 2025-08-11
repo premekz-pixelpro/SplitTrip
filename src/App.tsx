@@ -18,7 +18,7 @@ export const App = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    console.log(isModalOpen);
+    // console.log(isModalOpen);
     let unsubscribe: Unsubscribe | null = null;
 
     if (currentEventId) {
@@ -52,22 +52,13 @@ export const App = () => {
   // console.log("currentEventId", user);
 
   if (!currentEvent) {
-    return (
-      <div className="app">
-        <div className="app-header">
-          <EventSelector />
-        </div>
-      </div>
-    );
+    return;
   }
 
   return (
     <div className="app">
-      <div className="app-header">
-        <h3>{currentEvent.title}</h3>
-      </div>
       <div className="content-area">
-        <SummaryCard />
+        {/* <SummaryCard /> */}
         <BillsList />
         <Button className="new-bill-button" onClick={() => setIsModalOpen(true)}>
           +
@@ -76,7 +67,6 @@ export const App = () => {
           <NewBill />
         </Modal>
       </div>
-      <div className="bottom-nav-bar">Footer</div>
     </div>
   );
 };
