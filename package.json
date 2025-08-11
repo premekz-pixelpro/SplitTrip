@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host --port 3000",
+    "dev": "vite --host --port 80",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -12,6 +12,8 @@
     "create-events": "node --import tsx src/utils/createTestEvents.ts"
   },
   "dependencies": {
+    "@tanstack/react-router": "^1.130.12",
+    "@tanstack/react-router-devtools": "^1.130.13",
     "classnames": "^2.5.1",
     "dotenv": "^16.5.0",
     "firebase": "^11.6.0",
@@ -22,6 +24,7 @@
   "devDependencies": {
     "@eslint/js": "^9.21.0",
     "@tailwindcss/vite": "^4.1.11",
+    "@tanstack/router-plugin": "^1.130.16",
     "@testing-library/react": "^16.3.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.14.0",
