@@ -1,15 +1,17 @@
 import { useEffect } from 'react';
-import { useEventStore, useAuthStore } from '@/store';
+import { useNavigate } from '@tanstack/react-router';
+import { useEventStore } from '@/store';
 
 export const EventSelector = () => {
   const { events, currentEvent, loading, error, fetchEvents, setCurrentEvent, calculateBalances } =
     useEventStore();
   // const currentUser = useAuthStore((state) => state.user);
   // const currentUserId = currentUser ? currentUser.uid : '';
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+  }, [fetchEvents]);
 
   if (loading) return <div>Loading events...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -27,6 +29,12 @@ export const EventSelector = () => {
           setCurrentEvent(selected || null);
           // console.log('Selected event:', selected?.id);
           calculateBalances(selected?.id || '');
+          if (selected?.id) {
+            localStorage.setItem('lastEventId', selected.id);
+            navigate({ to: `/${selected.id}/newBill` });
+          } else {
+            localStorage.removeItem('lastEventId');
+          }
         }}
       >
         <option value="">Choose an event</option>

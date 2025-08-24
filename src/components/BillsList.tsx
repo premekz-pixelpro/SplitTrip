@@ -41,8 +41,8 @@ export const BillsList = () => {
         <div>No bills available</div>
       ) : (
         <>
-          <h2 className="pb-4 text-red-300">Lista 5 ostatnich rachunków</h2>
-          {/* <select
+          <h2 className="pb-4 text-red-300">Lista rachunków</h2>
+          <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as string)}
             className="p-2 rounded border"
@@ -50,9 +50,9 @@ export const BillsList = () => {
             <option value="dateNewest">Najnowsze</option>
             <option value="dateOldest">Najstarsze</option>
             <option value="value">Wartość</option>
-          </select> */}
+          </select>
           <ul className="bills-list">
-            {sortedBills.slice(0, 5).map((bill) => (
+            {sortedBills.map((bill) => (
               <BillItem key={bill.id} bill={bill} />
             ))}
           </ul>

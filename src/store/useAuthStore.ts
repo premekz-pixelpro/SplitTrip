@@ -23,6 +23,7 @@ interface AuthStore {
   signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  checkAuthState: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthStore>((set) => ({
@@ -30,6 +31,22 @@ export const useAuthStore = create<AuthStore>((set) => ({
   userData: null,
   loading: false,
   error: null,
+
+  checkAuthState: () => {
+    return new Promise((resolve) => {
+      // set({ loading: true });
+
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        set({
+          user,
+          loading: false,
+          error: null,
+        });
+        unsubscribe(); // przestań nasłuchiwać po pierwszym sprawdzeniu
+        resolve();
+      });
+    });
+  },
 
   fetchUserData: async (userId: string) => {
     try {

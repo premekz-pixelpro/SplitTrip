@@ -1,16 +1,27 @@
 import { Link } from '@tanstack/react-router';
+import { useEventStore } from '@/store';
+
 export const Footer = () => {
+  const currentEvent = useEventStore((state) => state.currentEvent);
+  const eventId = currentEvent?.id;
+
   return (
     <div className="bottom-nav-bar">
       <div className="p-2 flex gap-2">
-        <Link to="/" className="[&.active]:font-bold">
-          Info
-        </Link>{' '}
-        <Link to="/profile" className="[&.active]:font-bold">
+        {eventId ? (
+          <>
+            <Link to={`/${eventId}/newBill`} className="[&.active]:font-bold">
+              NewBill
+            </Link>
+            <Link to={`/${eventId}/billhistory`} className="[&.active]:font-bold">
+              BillHistory
+            </Link>
+          </>
+        ) : (
+          <span className="text-gray-400">Wybierz event aby zobaczyć opcje</span>
+        )}
+        <Link to="/user" className="[&.active]:font-bold">
           User
-        </Link>
-        <Link to="/billhistory" className="[&.active]:font-bold">
-          BillHistory
         </Link>
       </div>
     </div>

@@ -9,18 +9,21 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as BillhistoryRouteImport } from './routes/billhistory'
+import { Route as UserRouteImport } from './routes/user'
+import { Route as EventIdRouteRouteImport } from './routes/$eventId/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EventIdIndexRouteImport } from './routes/$eventId/index'
+import { Route as EventIdNewBillRouteImport } from './routes/$eventId/newBill'
+import { Route as EventIdBillhistoryRouteImport } from './routes/$eventId/billhistory'
 
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
+const UserRoute = UserRouteImport.update({
+  id: '/user',
+  path: '/user',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BillhistoryRoute = BillhistoryRouteImport.update({
-  id: '/billhistory',
-  path: '/billhistory',
+const EventIdRouteRoute = EventIdRouteRouteImport.update({
+  id: '/$eventId',
+  path: '/$eventId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -28,51 +31,92 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EventIdIndexRoute = EventIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => EventIdRouteRoute,
+} as any)
+const EventIdNewBillRoute = EventIdNewBillRouteImport.update({
+  id: '/newBill',
+  path: '/newBill',
+  getParentRoute: () => EventIdRouteRoute,
+} as any)
+const EventIdBillhistoryRoute = EventIdBillhistoryRouteImport.update({
+  id: '/billhistory',
+  path: '/billhistory',
+  getParentRoute: () => EventIdRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/billhistory': typeof BillhistoryRoute
-  '/profile': typeof ProfileRoute
+  '/$eventId': typeof EventIdRouteRouteWithChildren
+  '/user': typeof UserRoute
+  '/$eventId/billhistory': typeof EventIdBillhistoryRoute
+  '/$eventId/newBill': typeof EventIdNewBillRoute
+  '/$eventId/': typeof EventIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/billhistory': typeof BillhistoryRoute
-  '/profile': typeof ProfileRoute
+  '/user': typeof UserRoute
+  '/$eventId/billhistory': typeof EventIdBillhistoryRoute
+  '/$eventId/newBill': typeof EventIdNewBillRoute
+  '/$eventId': typeof EventIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/billhistory': typeof BillhistoryRoute
-  '/profile': typeof ProfileRoute
+  '/$eventId': typeof EventIdRouteRouteWithChildren
+  '/user': typeof UserRoute
+  '/$eventId/billhistory': typeof EventIdBillhistoryRoute
+  '/$eventId/newBill': typeof EventIdNewBillRoute
+  '/$eventId/': typeof EventIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/billhistory' | '/profile'
+  fullPaths:
+    | '/'
+    | '/$eventId'
+    | '/user'
+    | '/$eventId/billhistory'
+    | '/$eventId/newBill'
+    | '/$eventId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/billhistory' | '/profile'
-  id: '__root__' | '/' | '/billhistory' | '/profile'
+  to:
+    | '/'
+    | '/user'
+    | '/$eventId/billhistory'
+    | '/$eventId/newBill'
+    | '/$eventId'
+  id:
+    | '__root__'
+    | '/'
+    | '/$eventId'
+    | '/user'
+    | '/$eventId/billhistory'
+    | '/$eventId/newBill'
+    | '/$eventId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  BillhistoryRoute: typeof BillhistoryRoute
-  ProfileRoute: typeof ProfileRoute
+  EventIdRouteRoute: typeof EventIdRouteRouteWithChildren
+  UserRoute: typeof UserRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
+    '/user': {
+      id: '/user'
+      path: '/user'
+      fullPath: '/user'
+      preLoaderRoute: typeof UserRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/billhistory': {
-      id: '/billhistory'
-      path: '/billhistory'
-      fullPath: '/billhistory'
-      preLoaderRoute: typeof BillhistoryRouteImport
+    '/$eventId': {
+      id: '/$eventId'
+      path: '/$eventId'
+      fullPath: '/$eventId'
+      preLoaderRoute: typeof EventIdRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -82,13 +126,50 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$eventId/': {
+      id: '/$eventId/'
+      path: '/'
+      fullPath: '/$eventId/'
+      preLoaderRoute: typeof EventIdIndexRouteImport
+      parentRoute: typeof EventIdRouteRoute
+    }
+    '/$eventId/newBill': {
+      id: '/$eventId/newBill'
+      path: '/newBill'
+      fullPath: '/$eventId/newBill'
+      preLoaderRoute: typeof EventIdNewBillRouteImport
+      parentRoute: typeof EventIdRouteRoute
+    }
+    '/$eventId/billhistory': {
+      id: '/$eventId/billhistory'
+      path: '/billhistory'
+      fullPath: '/$eventId/billhistory'
+      preLoaderRoute: typeof EventIdBillhistoryRouteImport
+      parentRoute: typeof EventIdRouteRoute
+    }
   }
 }
 
+interface EventIdRouteRouteChildren {
+  EventIdBillhistoryRoute: typeof EventIdBillhistoryRoute
+  EventIdNewBillRoute: typeof EventIdNewBillRoute
+  EventIdIndexRoute: typeof EventIdIndexRoute
+}
+
+const EventIdRouteRouteChildren: EventIdRouteRouteChildren = {
+  EventIdBillhistoryRoute: EventIdBillhistoryRoute,
+  EventIdNewBillRoute: EventIdNewBillRoute,
+  EventIdIndexRoute: EventIdIndexRoute,
+}
+
+const EventIdRouteRouteWithChildren = EventIdRouteRoute._addFileChildren(
+  EventIdRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  BillhistoryRoute: BillhistoryRoute,
-  ProfileRoute: ProfileRoute,
+  EventIdRouteRoute: EventIdRouteRouteWithChildren,
+  UserRoute: UserRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

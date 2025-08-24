@@ -5,7 +5,7 @@ import { Unsubscribe, doc, onSnapshot } from 'firebase/firestore';
 import { LoginForm } from '@/components/LoginForm';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useEventStore } from '@/store/useEventStore';
-import { EventSelector } from '@/components/EventSelector';
+import { EventSelector } from '@/components';
 import { SummaryCard, FriendsList, NewBill, BillsList, Modal, Button } from '@/components';
 import '@/styles/App.css';
 
@@ -52,7 +52,11 @@ export const App = () => {
   // console.log("currentEventId", user);
 
   if (!currentEvent) {
-    return;
+    return (
+      <>
+        <EventSelector />
+      </>
+    );
   }
 
   return (
