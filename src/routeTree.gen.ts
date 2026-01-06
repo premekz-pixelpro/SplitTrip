@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as UserRouteImport } from './routes/user'
 import { Route as EventIdRouteRouteImport } from './routes/$eventId/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as EventIdIndexRouteImport } from './routes/$eventId/index'
 import { Route as EventIdNewBillRouteImport } from './routes/$eventId/newBill'
 import { Route as EventIdBillhistoryRouteImport } from './routes/$eventId/billhistory'
 
@@ -31,11 +30,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EventIdIndexRoute = EventIdIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => EventIdRouteRoute,
-} as any)
 const EventIdNewBillRoute = EventIdNewBillRouteImport.update({
   id: '/newBill',
   path: '/newBill',
@@ -53,14 +47,13 @@ export interface FileRoutesByFullPath {
   '/user': typeof UserRoute
   '/$eventId/billhistory': typeof EventIdBillhistoryRoute
   '/$eventId/newBill': typeof EventIdNewBillRoute
-  '/$eventId/': typeof EventIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$eventId': typeof EventIdRouteRouteWithChildren
   '/user': typeof UserRoute
   '/$eventId/billhistory': typeof EventIdBillhistoryRoute
   '/$eventId/newBill': typeof EventIdNewBillRoute
-  '/$eventId': typeof EventIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -69,7 +62,6 @@ export interface FileRoutesById {
   '/user': typeof UserRoute
   '/$eventId/billhistory': typeof EventIdBillhistoryRoute
   '/$eventId/newBill': typeof EventIdNewBillRoute
-  '/$eventId/': typeof EventIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -79,14 +71,13 @@ export interface FileRouteTypes {
     | '/user'
     | '/$eventId/billhistory'
     | '/$eventId/newBill'
-    | '/$eventId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/$eventId'
     | '/user'
     | '/$eventId/billhistory'
     | '/$eventId/newBill'
-    | '/$eventId'
   id:
     | '__root__'
     | '/'
@@ -94,7 +85,6 @@ export interface FileRouteTypes {
     | '/user'
     | '/$eventId/billhistory'
     | '/$eventId/newBill'
-    | '/$eventId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -126,13 +116,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$eventId/': {
-      id: '/$eventId/'
-      path: '/'
-      fullPath: '/$eventId/'
-      preLoaderRoute: typeof EventIdIndexRouteImport
-      parentRoute: typeof EventIdRouteRoute
-    }
     '/$eventId/newBill': {
       id: '/$eventId/newBill'
       path: '/newBill'
@@ -153,13 +136,11 @@ declare module '@tanstack/react-router' {
 interface EventIdRouteRouteChildren {
   EventIdBillhistoryRoute: typeof EventIdBillhistoryRoute
   EventIdNewBillRoute: typeof EventIdNewBillRoute
-  EventIdIndexRoute: typeof EventIdIndexRoute
 }
 
 const EventIdRouteRouteChildren: EventIdRouteRouteChildren = {
   EventIdBillhistoryRoute: EventIdBillhistoryRoute,
   EventIdNewBillRoute: EventIdNewBillRoute,
-  EventIdIndexRoute: EventIdIndexRoute,
 }
 
 const EventIdRouteRouteWithChildren = EventIdRouteRoute._addFileChildren(

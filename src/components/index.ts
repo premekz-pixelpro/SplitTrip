@@ -13,3 +13,5 @@ export * from './AddNewEvent';
 export * from './Header';
 export * from './Footer';
 export * from './LoginForm';
+export * from './SignUpForm';
+export * from './AddNewParticipants';

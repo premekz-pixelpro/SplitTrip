@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Event } from './types/types';
+import { Event } from '@/types/types';
 import { db } from '@/config/firebase';
 import { Unsubscribe, doc, onSnapshot } from 'firebase/firestore';
-import { LoginForm } from '@/components/LoginForm';
-import { useAuthStore } from '@/store/useAuthStore';
-import { useEventStore } from '@/store/useEventStore';
+import { useAuthStore, useEventStore } from '@/store/';
 import { EventSelector } from '@/components';
-import { SummaryCard, FriendsList, NewBill, BillsList, Modal, Button } from '@/components';
+import { LoginForm, NewBill, BillsList, Modal, Button } from '@/components';
 import '@/styles/App.css';
 
 export const App = () => {
@@ -47,7 +45,7 @@ export const App = () => {
   const currentEvent = useEventStore((state) => state.currentEvent);
 
   if (!user) {
-    return <LoginForm />;
+    return <LoginForm onShowSignUp={() => {}} />;
   }
   // console.log("currentEventId", user);
 

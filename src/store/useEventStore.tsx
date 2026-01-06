@@ -1,7 +1,8 @@
 import { create } from 'zustand';
-import { Bill, Event, FirebaseUser } from '@/types/types';
+import { Bill, Event, EventParticipant, FirebaseUser } from '@/types/types';
 import {
   collection,
+  documentId,
   getDocs,
   updateDoc,
   addDoc,
@@ -11,8 +12,14 @@ import {
   query,
   where,
   getDoc,
+  writeBatch,
+  arrayUnion,
+  DocumentData,
+  QuerySnapshot,
+  QueryDocumentSnapshot,
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
+import { snapshot } from 'node:test';
 
 interface EventStore {
   // Event-related state
@@ -33,9 +40,14 @@ interface EventStore {
   // Event actions
 
   fetchEvents: () => Promise<void>;
+  fetchEventsByIds: (eventIds: string[]) => Promise<Event[]>;
   fetchBills: (eventId: string) => Promise<void>;
   setCurrentEvent: (event: Event | null) => void;
-  createEvent: (title: string, description: string, creatorId: string) => Promise<Event>;
+  createEvent: (
+    title: string,
+    description: string,
+    currentUser: { uid: string; displayName: string }
+  ) => Promise<Event>;
   addParticipant: (eventId: string, user: FirebaseUser) => Promise<void>;
   getCurrentUserDetails: (userId: string) => FirebaseUser | null;
   updateTotalExpenses: (eventId: string, billAmount: number) => Promise<void>;
@@ -78,38 +90,101 @@ export const useEventStore = create<EventStore>((set, get) => ({
     }
   },
 
+  fetchEventsByIds: async (userEventIds: string[]) => {
+    if (!userEventIds.length) {
+      set({ events: [], loading: false, error: null }); // Zresetuj stan dla pustej tablicy
+      return [];
+    }
+
+    set({ loading: true, error: null });
+
+    const CHUNK_SIZE = 10; // Maksymalna liczba elementów dla zapytania 'in' w Firestore
+    const eventsRef = collection(db, 'events');
+    const allEventsData: Event[] = [];
+    const queryPromises: Promise<QuerySnapshot<DocumentData>>[] = []; // Tablica na wszystkie Promise'y z zapytań
+
+    // Dziel tablicę userEventIds na chunki po 10
+    for (let i = 0; i < userEventIds.length; i += CHUNK_SIZE) {
+      const chunk = userEventIds.slice(i, i + CHUNK_SIZE);
+      // Stwórz zapytanie dla każdego chunka
+      const q = query(eventsRef, where(documentId(), 'in', chunk));
+      // Dodaj Promise z wykonaniem zapytania do tablicy
+      queryPromises.push(getDocs(q));
+    }
+    //Przechodzi petla do q zapisuje obiekt zapytania a queryPromises.push wpycha obiekt powstaly z getDocs(q) ktory jest Promisem bo getDocs zwraca Promise do tablicy, przy nastepnej iteracji tworzy nowy obiekt i wpycha do tablicy jako kolejny i tak do spelnienia warunku for
+
+    // query tworze obiekt zapytania na referencji eventsRef czyli kolekcji 'events' filtruje przy pomocy where podajac za pomoca funkcji documentId() tylko id i przy pomocy operatora in zawierajace id z userEventIds, tworze zmienna querySnapShot do ktorej pobieram dokument q, w zmiennej eventsData z querySnapshot tworzy tablice i mapujac po niej sprawdza jesli dokument nie istnieje to daje null jesli tak tworzy obiekt z id i danymi na koncu filtruje wyrzucajac nulle i rzutuje na Event[]
+
+    try {
+      const querySnapshots = await Promise.all(queryPromises);
+      querySnapshots.forEach((snapshot: QuerySnapshot<DocumentData>) => {
+        snapshot.docs.forEach((docSnap: QueryDocumentSnapshot<DocumentData>) => {
+          if (docSnap.exists()) {
+            allEventsData.push({ id: docSnap.id, ...docSnap.data() } as Event);
+          }
+        });
+      });
+
+      set({ events: allEventsData, loading: false });
+      return allEventsData;
+    } catch (err) {
+      set({
+        error: err instanceof Error ? err.message : 'Error fetching events',
+        loading: false,
+      });
+      return [];
+    }
+  },
+
   setCurrentEvent: (event: Event | null) => {
     set({ currentEvent: event });
   },
 
-  createEvent: async (title, description, creatorId) => {
+  createEvent: async (title, description, currentUser) => {
     set({ loading: true, error: null });
+
     try {
+      const participant: EventParticipant = {
+        userId: currentUser.uid,
+        displayName: currentUser.displayName || 'Unknown',
+        joinedAt: null,
+        balance: 0,
+      };
       const eventData = {
         title,
         description,
-        creatorId,
-        participants: [],
-        balances: {},
+        creatorId: currentUser.uid,
+        participants: [participant],
+        balances: { [currentUser.uid]: 0 },
         totalExpenses: 0,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
 
       //  - zapisz do Firestore
-      const docRef = await addDoc(collection(db, 'events'), eventData);
-      console.log('Event created with ID:', docRef.id);
+      const batch = writeBatch(db); // atomowy zapis prostszy od transaction
+
+      const eventRef = doc(collection(db, 'events'));
+      batch.set(eventRef, eventData);
+
+      const userRef = doc(db, 'users', currentUser.uid);
+      batch.update(userRef, { events: arrayUnion(eventRef.id) });
+
+      await batch.commit(); // odśwież listę eventów w stanie
+
+      // console.log('Event created with ID:', eventRef.id);
+      // console.log('currentUser:', currentUser);
 
       // Utwórz pełny obiekt eventu z ID
       const newEvent: Event = {
-        id: docRef.id,
+        id: eventRef.id,
         ...eventData,
         createdAt: eventData.createdAt as Event['createdAt'],
         updatedAt: eventData.updatedAt as Event['updatedAt'],
-        eventBills: [], // Add this line to satisfy the Event type
+        eventBills: [],
       };
 
-      // Dodaj do lokalnego stanu
+      // // Dodaj do lokalnego stanu
       set((state) => ({
         events: [...state.events, newEvent],
         loading: false,
@@ -123,6 +198,8 @@ export const useEventStore = create<EventStore>((set, get) => ({
         loading: false,
       });
       throw err;
+    } finally {
+      set({ loading: false });
     }
   },
 
@@ -240,11 +317,12 @@ export const useEventStore = create<EventStore>((set, get) => ({
   fetchParticipants: async () => {
     const { currentEvent } = get();
     if (!currentEvent) return;
+    if (currentEvent.participants.length === 0) return;
 
     set({ loading: true });
     try {
-      const participantIds = currentEvent.participants.map((p) => p.userId);
-      // console.log('Participant IDs:', participantIds);
+      const participantIds = currentEvent.participants?.map((p) => p.userId);
+      console.log('Participant IDs:', participantIds);
 
       const usersRef = collection(db, 'users');
       const q = query(usersRef, where('uid', 'in', participantIds));
@@ -252,7 +330,7 @@ export const useEventStore = create<EventStore>((set, get) => ({
 
       const usersData = querySnapshot.docs.map((doc) => {
         const userData = doc.data();
-        const participantData = currentEvent.participants.find((p) => p.userId === doc.id);
+        const participantData = currentEvent.participants?.find((p) => p.userId === doc.id);
 
         return {
           uid: doc.id,
@@ -300,7 +378,7 @@ export const useEventStore = create<EventStore>((set, get) => ({
       );
       //  console.log("ParticipantIds", participantIds)
 
-      calculatedBalances = participantIds.reduce((acc: Record<string, number>, userId) => {
+      calculatedBalances = participantIds?.reduce((acc: Record<string, number>, userId) => {
         acc[userId] = 0; // Initialize balance for each user
         return acc;
       }, {});

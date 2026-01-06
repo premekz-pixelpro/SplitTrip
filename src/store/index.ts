@@ -3,3 +3,4 @@ export * from './useNewBillStore';
 export * from './useAuthStore';
 export * from './useUsersStore';
 export * from './useEventStore';
+export * from './useUserProfileStore';

@@ -1,28 +1,59 @@
 import { useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { useEventStore } from '@/store/useEventStore';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useUserProfileStore } from '@/store/useUserProfileStore';
 
 export const AddNewEvent = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  // Pobierz funkcję createEvent ze store'a
+  // Pobierz potrzebne funkcje ze store'ów
   const createEvent = useEventStore((state) => state.createEvent);
+  const setCurrentEvent = useEventStore((state) => state.setCurrentEvent);
+  const fetchEventsByIds = useEventStore((state) => state.fetchEventsByIds);
 
-  // Pobierz aktualnego użytkownika
   const currentUser = useAuthStore((state) => state.user);
+  const userProfile = useUserProfileStore((state) => state.userProfile);
+  const fetchUserProfile = useUserProfileStore((state) => state.fetchUserProfile);
 
   const handleAddEvent = async () => {
     if (!title || !currentUser) return;
 
     setLoading(true);
     try {
-      await createEvent(title, description, currentUser.uid);
-      // Reset formularza po dodaniu
+      // Utwórz event i pobierz wynik (upewnij się, że createEvent zwraca utworzony event)
+      const newEvent = await createEvent(title, description, {
+        uid: currentUser.uid,
+        displayName: currentUser.displayName ?? '',
+      });
+      await fetchUserProfile(currentUser.uid); //odswierz profil użytkownika z nową listą eventów
+
+      // Reset formularza
       setTitle('');
       setDescription('');
-      // Opcjonalnie: zamknij modal lub przekieruj
+
+      // Odśwież profil użytkownika, aby pobrać zaktualizowaną listę eventów
+      if (currentUser.uid) {
+        await fetchUserProfile(currentUser.uid);
+      }
+
+      // Jeśli mamy już zaktualizowany userProfile z nowym eventem
+      if (userProfile?.events) {
+        // Odśwież listę eventów
+        await fetchUserProfile(currentUser.uid);
+      }
+
+      // Ustaw nowy event jako aktywny
+      setCurrentEvent(newEvent);
+
+      // Zapisz ID eventu w localStorage
+      localStorage.setItem('lastEventId', newEvent.id);
+
+      // Przekieruj do nowego eventu
+      navigate({ to: `/${newEvent.id}/newBill` });
     } catch (error) {
       console.error('Error creating event:', error);
     } finally {

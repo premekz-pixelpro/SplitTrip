@@ -7,7 +7,7 @@ export interface Event {
   createdAt: Timestamp;
   updatedAt: Timestamp;
   creatorId: string;
-  participants:  EventParticipant[];
+  participants: EventParticipant[];
   totalExpenses: number;
   eventBills: Bill[];
   balances: Record<string, number>; // Klucz to userId, wartość to saldo
@@ -16,8 +16,8 @@ export interface Event {
 export interface EventParticipant {
   userId: string;
   displayName: string;
-  joinedAt: Timestamp;
-  balance: number; 
+  joinedAt: Timestamp | null; // jak dodaje do tablicy to null
+  balance: number;
   image?: string;
 }
 
@@ -66,5 +66,7 @@ export interface FirebaseUser {
   displayName: string;
   email: string;
   image?: string;
-  balance: number;
+  events: string[]; // Lista ID wydarzeńences: {
+  currency: string;
+  language: string;
 }

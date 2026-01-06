@@ -1,53 +1,53 @@
-import { useEffect } from 'react';
 import { useEventStore } from '@/store/useEventStore';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useUserProfileStore } from '@/store';
 import classNames from 'classnames';
+import { useEffect } from 'react';
 
 export const SummaryCard = () => {
   const { currentEvent } = useEventStore();
-  const currentUser = useAuthStore((state) => state.userData);
+  const { user } = useAuthStore();
+  const { userProfile, fetchUserProfile } = useUserProfileStore();
 
-  // useEffect(() => {
-  //   if (currentEvent) {
-  //     fetchParticipants();
-  //   }
-  // }, [currentEvent]);
+  useEffect(() => {
+    if (user?.uid) {
+      fetchUserProfile(user.uid);
+    }
+  }, [user, fetchUserProfile]);
 
-  //getCurrentUserDetails niepotrzebne do przebudowy i wywalenia
-  // console.log('currentEvent', currentEvent?.participants);
-
-  const currentUserId = currentUser ? currentUser.uid : '';
+  const currentUserId = userProfile?.uid;
   const participants = currentEvent?.participants || [];
-
-  // const currentUserDetails = currentUser ? getCurrentUserDetails(currentUser.uid) : null;
-  // console.log('currentUserDetails', currentUser);
-  // console.log('getCurrent', currentUserDetails);
-
-  // if (!currentEvent) return null;
+  const balances = currentEvent?.balances || {};
 
   return (
     <div className={classNames('summary-card flex justify-between')}>
       <div className="">
         <h2 className="pb-4 text-red-300">Podsumowanie</h2>
-        <h3 className="text-2xl font-bold">{currentUser?.displayName}</h3>
+        <h3 className="text-2xl font-bold">{userProfile?.displayName}</h3>
         <p className="">Łączna kwota: {currentEvent?.totalExpenses} zł</p>
         <p>Uczestnicy: {participants.length}</p>
-        {currentUser && (
+        {userProfile?.uid && (
           <p className="balance-info">
             {`Twoje saldo: `}
             <span
               className={
-                Math.round(currentEvent?.balances[currentUserId] * 10) / 10 > 0
+                currentUserId && Math.round(balances[currentUserId] * 10) / 10 > 0
                   ? 'positive'
                   : 'negative'
               }
             >
-              {Math.round(currentEvent?.balances[currentUserId] * 10) / 10} zł
+              {currentUserId && Math.round(balances[currentUserId] * 10) / 10
+                ? Math.round(balances[currentUserId] * 10) / 10 + ' zł'
+                : 'Wybierz Event'}{' '}
             </span>
           </p>
         )}
       </div>
-      <img src={currentUser?.image} alt="user avatar" className="user-avatar" />
+      <img
+        src={userProfile?.image || 'https://i.pravatar.cc/300'}
+        alt="user avatar"
+        className="user-avatar"
+      />
     </div>
   );
 };

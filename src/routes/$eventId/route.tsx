@@ -1,10 +1,10 @@
-import { createFileRoute, Outlet, useNavigate, useParams } from '@tanstack/react-router';
-import { useEventStore } from '@/store/useEventStore';
-import { useAuthStore } from '@/store/useAuthStore';
 import { useEffect, useState } from 'react';
+import { createFileRoute, Outlet, useNavigate, useParams } from '@tanstack/react-router';
+import { useAuthStore, useEventStore } from '@/store/';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
-import firebase from 'firebase/compat/app';
+import { Event, EventParticipant } from '@/types/types';
+// import firebase from 'firebase/compat/app';
 
 export const Route = createFileRoute('/$eventId')({
   component: EventLayout,
@@ -20,7 +20,7 @@ function EventLayout() {
 
   useEffect(() => {
     const checkEventAccess = async () => {
-      console.log('currentUser:', currentUser);
+      // console.log('currentUser:', currentUser);
       setLoading(true);
       setError(null);
 
@@ -42,38 +42,41 @@ function EventLayout() {
           return;
         }
 
-        const eventData = { id: eventSnap.id, ...eventSnap.data() };
+        const eventData = {
+          id: eventSnap.id,
+          ...(eventSnap.data() as { participants?: EventParticipant[] }),
+        };
         // console.log('EventData:', eventData);
 
         // Sprawdź czy użytkownik jest uczestnikiem
         const isParticipant = eventData.participants?.some(
-          (p: firebase.firestore.DocumentData) => p.userId === currentUser.uid
+          (p) => p.userId === (currentUser.uid as EventParticipant['userId'])
         );
 
         if (!isParticipant) {
           console.log('Użytkownik nie jest uczestnikiem tego eventu');
           setError('Nie masz dostępu do tego eventu');
-          navigate({ to: '/' });
+          // navigate({ to: '/' });
           return;
         }
 
         // Jeśli wszystko OK, ustaw event i zapisz do localStorage
-        setCurrentEvent(eventData);
+        setCurrentEvent(eventData as Event);
         localStorage.setItem('lastEventId', eventData.id);
         setLoading(false);
       } catch (err) {
         console.error('Error checking event access:', err);
         setError('Błąd podczas sprawdzania dostępu');
-        navigate({ to: '/' });
+        // navigate({ to: '/' });
       }
     };
 
     checkEventAccess();
   }, [eventId, currentUser, navigate, setCurrentEvent]);
 
-  if (loading) {
-    return <div>Sprawdzanie dostępu do eventu...</div>;
-  }
+  // if (loading) {
+  //   return <div>Sprawdzanie dostępu do eventu...</div>;
+  // }
 
   if (error) {
     return <div>Błąd: {error}</div>;

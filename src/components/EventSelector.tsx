@@ -1,24 +1,51 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { useEventStore } from '@/store';
+import { useAuthStore, useEventStore, useUserProfileStore } from '@/store';
 
 export const EventSelector = () => {
-  const { events, currentEvent, loading, error, fetchEvents, setCurrentEvent, calculateBalances } =
-    useEventStore();
+  const {
+    events,
+    currentEvent,
+    loading,
+    error,
+    setCurrentEvent,
+    calculateBalances,
+    fetchParticipants,
+    fetchEventsByIds,
+  } = useEventStore();
+
+  const { userProfile, loadingProfile, fetchUserProfile } = useUserProfileStore();
+  const { user } = useAuthStore();
   // const currentUser = useAuthStore((state) => state.user);
   // const currentUserId = currentUser ? currentUser.uid : '';
   const navigate = useNavigate();
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
 
   useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
+    if (user?.uid) {
+      fetchUserProfile(user.uid);
+      // console.log('Fetched user profile in EventSelector:', user.uid);
+      // console.log('User profile:', userProfile);
+    }
+  }, [user, fetchUserProfile]);
 
-  if (loading) return <div>Loading events...</div>;
+  useEffect(() => {
+    const loadEvents = async () => {
+      if (userProfile?.events?.length) {
+        setIsLoadingEvents(true);
+        await fetchEventsByIds(userProfile.events);
+        setIsLoadingEvents(false);
+      }
+    };
+
+    if (!loadingProfile && userProfile) {
+      loadEvents();
+    }
+  }, [userProfile, loadingProfile, fetchEventsByIds]);
+
+  if (loading || loadingProfile || isLoadingEvents) return <div>Loading events...</div>;
   if (error) return <div>Error: {error}</div>;
   if (!events.length) return <div>No events found</div>;
-
-  // const userEvents = events.filter((event) => event.participants.includes(currentUserId));
-  // console.log('events', currentEvent?.participants);
 
   return (
     <div className="event-selector">
@@ -27,7 +54,7 @@ export const EventSelector = () => {
         onChange={(e) => {
           const selected = events.find((event) => event.id === e.target.value);
           setCurrentEvent(selected || null);
-          // console.log('Selected event:', selected?.id);
+          fetchParticipants();
           calculateBalances(selected?.id || '');
           if (selected?.id) {
             localStorage.setItem('lastEventId', selected.id);
