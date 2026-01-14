@@ -27,7 +27,7 @@ export const AddNewEvent = () => {
       // Utwórz event i pobierz wynik (upewnij się, że createEvent zwraca utworzony event)
       const newEvent = await createEvent(title, description, {
         uid: currentUser.uid,
-        displayName: currentUser.displayName ?? '',
+        displayName: userProfile?.displayName || 'Nieznany użytkownik',
       });
       await fetchUserProfile(currentUser.uid); //odswierz profil użytkownika z nową listą eventów
 

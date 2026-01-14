@@ -2,15 +2,13 @@ import { useState } from 'react';
 import {
   Header,
   Footer,
-  LoginForm,
-  SignUpForm,
   EventSelector,
   AddNewEvent,
   Modal,
   AddNewParticipants,
 } from '@/components/';
 import { useAuthStore } from '@/store';
-import { createRootRoute, Outlet } from '@tanstack/react-router';
+import { Navigate, Outlet, createRootRoute, useRouterState } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { Toaster } from 'react-hot-toast';
 
@@ -22,7 +20,7 @@ function RootComponent() {
   const { user, loadingAuth } = useAuthStore();
   // const [authInitialized, setAuthInitialized] = useState(false);
   const [showAddEvent, setShowAddEvent] = useState(false);
-  const [showSignUp, setShowSignUp] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   // useEffect(() => {
   //   const initAuth = async () => {
@@ -42,13 +40,18 @@ function RootComponent() {
     return <div className="loading">Inicjalizacja aplikacji...</div>;
   }
 
-  // Jeśli użytkownik nie jest zalogowany, pokaż tylko LoginForm
+  // Guard: jeśli użytkownik nie jest zalogowany, trzymaj go na /login lub /signup
   if (!user) {
-    return showSignUp ? (
-      <SignUpForm onShowLogin={() => setShowSignUp(false)} />
-    ) : (
-      <LoginForm onShowSignUp={() => setShowSignUp(true)} />
-    );
+    // Publiczny wyjątek: tylko prawdziwe invite linki w formacie /join/<eventId>
+    if (pathname !== '/login' && pathname !== '/signup' && !pathname.startsWith('/join/')) {
+      return <Navigate to="/login" />;
+    }
+    return <Outlet />;
+  }
+
+  // Guard: jeśli użytkownik jest zalogowany, nie pokazuj stron logowania
+  if (pathname === '/login' || pathname === '/signup') {
+    return <Navigate to="/" />;
   }
 
   // Jeśli użytkownik jest zalogowany, pokaż pełną aplikację

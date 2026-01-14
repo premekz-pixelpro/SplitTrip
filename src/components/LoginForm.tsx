@@ -3,7 +3,13 @@ import { useAuthStore } from '@/store/';
 import toast, { Toaster } from 'react-hot-toast';
 import '@/styles/components/LoginForm.css';
 
-export const LoginForm = ({ onShowSignUp }: { onShowSignUp: () => void }) => {
+export const LoginForm = ({
+  onShowSignUp,
+  onSuccess,
+}: {
+  onShowSignUp: () => void;
+  onSuccess?: () => void;
+}) => {
   const { signIn, loadingAuth, authError } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,6 +20,7 @@ export const LoginForm = ({ onShowSignUp }: { onShowSignUp: () => void }) => {
       const user = await signIn(email, password);
       if (user) {
         toast('Logged in successfully!');
+        onSuccess?.();
       }
     } catch {
       toast('Login failed. Please try again.');

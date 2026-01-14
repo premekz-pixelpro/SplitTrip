@@ -2,21 +2,27 @@ import { useState } from 'react';
 import { useAuthStore } from '@/store/';
 import toast, { Toaster } from 'react-hot-toast';
 
-export const SignUpForm = ({ onShowLogin }: { onShowLogin: () => void }) => {
+export const SignUpForm = ({
+  onShowLogin,
+  onSuccess,
+}: {
+  onShowLogin: () => void;
+  onSuccess?: () => void;
+}) => {
   const { signUp, authError, loadingAuth } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
 
-
   // Dodac jak jestem na /join/eventId to przy rejestracji dodac usera do eventu automatycznie
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await signUp(email, password, displayName);
       // console.log('User signed up:', displayName);
       toast(`Witamy w aplikacji ${displayName}! Konto zostało utworzone.`);
+      onSuccess?.();
     } catch {
       toast('Rejestracja nie powiodła się. Spróbuj ponownie.');
     }

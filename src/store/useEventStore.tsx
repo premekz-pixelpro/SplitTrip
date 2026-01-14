@@ -20,6 +20,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { snapshot } from 'node:test';
+import { join } from 'path';
+import { time } from 'console';
 
 interface EventStore {
   // Event-related state
@@ -155,6 +157,7 @@ export const useEventStore = create<EventStore>((set, get) => ({
         description,
         creatorId: currentUser.uid,
         participants: [participant],
+        participantJoinedAt: { [currentUser.uid]: serverTimestamp() },
         balances: { [currentUser.uid]: 0 },
         totalExpenses: 0,
         createdAt: serverTimestamp(),
@@ -181,6 +184,7 @@ export const useEventStore = create<EventStore>((set, get) => ({
         ...eventData,
         createdAt: eventData.createdAt as Event['createdAt'],
         updatedAt: eventData.updatedAt as Event['updatedAt'],
+        participantJoinedAt: { [currentUser.uid]: Timestamp.now() },
         eventBills: [],
       };
 
@@ -288,12 +292,14 @@ export const useEventStore = create<EventStore>((set, get) => ({
       const newParticipant = {
         userId: user.uid,
         displayName: user.displayName,
-        joinedAt: serverTimestamp() as unknown as Timestamp,
+        joinedAt: null, // do skasowania jak sprawdze czy bledow nie sieje
         balance: 0,
       };
 
       await updateDoc(eventRef, {
         participants: [...(get().currentEvent?.participants || []), newParticipant],
+        [`participantJoinedAt.${user.uid}`]: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
 
       // Update local state
@@ -338,6 +344,9 @@ export const useEventStore = create<EventStore>((set, get) => ({
           displayName: userData.displayName,
           image: userData.image,
           balance: participantData?.balance || 0,
+          events: userData.events || [],
+          currency: userData.currency || 'PLN',
+          language: userData.language || 'pl',
         };
       });
 

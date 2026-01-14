@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { createFileRoute, Outlet, useNavigate, useParams } from '@tanstack/react-router';
+import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router';
 import { useAuthStore, useEventStore } from '@/store/';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
@@ -11,11 +11,11 @@ export const Route = createFileRoute('/$eventId')({
 });
 
 function EventLayout() {
-  const { eventId } = useParams({ from: '/$eventId' });
+  const { eventId } = Route.useParams();
   const navigate = useNavigate();
   const { setCurrentEvent } = useEventStore();
   const currentUser = useAuthStore((state) => state.user);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -25,8 +25,8 @@ function EventLayout() {
       setError(null);
 
       if (!currentUser) {
-        console.log('No current user, redirecting to home');
-        navigate({ to: '/' });
+        console.log('No current user, waiting for auth guard redirect');
+        setLoading(false);
         return;
       }
 

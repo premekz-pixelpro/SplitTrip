@@ -17,13 +17,16 @@ export const AddParticipants = () => {
   const markAsPaid = useNewBillStore((state) => state.markAsPaid);
   const setShare = useNewBillStore((state) => state.setShare);
   const otherParticipants = participants.filter((user) => user.uid !== currentUser?.uid);
+  const participantsToAdd = otherParticipants.filter(
+    (user) => !selectedParticipants.some((p) => p.userId === user.uid)
+  );
 
   useEffect(() => {
     fetchParticipants();
     setShare(billValue);
-  }, [billValue, selectedParticipants.length]); // Recalculate share when value or participants change
+  }, [billValue, selectedParticipants.length, fetchParticipants, setShare]); // Recalculate share when value or participants change
 
-  console.log('participants', selectedParticipants);
+  // console.log('participants', selectedParticipants);
   const getShareColor = (share: number) => {
     if (share > 0) return 'green';
     if (share < 0) return 'red';
@@ -41,17 +44,19 @@ export const AddParticipants = () => {
         <h3>Select Participants</h3>
         {/* List of available users */}
         <div className="available-friends">
-          {otherParticipants
-            .filter((user) => !selectedParticipants.some((p) => p.userId === user.uid))
-            .map((user) => (
+          {participantsToAdd.length > 0 ? (
+            participantsToAdd.map((user) => (
               <div key={user.uid} className="friend-item">
-                <img src={user.image} alt={user.displayName} />
+                <img src={user.image || '/default-profile.png'} alt={user.displayName} />
                 <span>{user.displayName}</span>
                 <Button onClick={() => addParticipant(user)} className="add-button">
                   Add to Bill
                 </Button>
               </div>
-            ))}
+            ))
+          ) : (
+            <p>No more participants to add</p>
+          )}
         </div>
       </Modal>
 
@@ -60,7 +65,11 @@ export const AddParticipants = () => {
         <h4>Participants</h4>
         {selectedParticipants.map((participant) => (
           <div key={participant.userId} className="participant-item">
-            <img src={participant.image} alt={participant.displayName} />
+            <img
+              style={{ width: '40px', height: '40px', borderRadius: '50%' }}
+              src={participant.image || '/default-profile.png'}
+              alt={participant.displayName}
+            />
             <span>{participant.displayName}</span>
             <span style={{ color: getShareColor(participant.share) }}>
               Share: {participant.share || 0}

@@ -88,7 +88,7 @@ export const AddNewParticipants = () => {
     return 'black';
   };
 
-  if (otherParticipants.length !== 0) return <div>No other participants in this event</div>;
+  // if (otherParticipants.length !== 0) return <div>No other participants in this event</div>;
 
   return (
     <div className="participants-section">

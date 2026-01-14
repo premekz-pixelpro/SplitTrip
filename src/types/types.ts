@@ -8,6 +8,7 @@ export interface Event {
   updatedAt: Timestamp;
   creatorId: string;
   participants: EventParticipant[];
+  participantJoinedAt?: Record<string, Timestamp>;
   totalExpenses: number;
   eventBills: Bill[];
   balances: Record<string, number>; // Klucz to userId, wartość to saldo

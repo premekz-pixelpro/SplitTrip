@@ -10,14 +10,27 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UserRouteImport } from './routes/user'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as EventIdRouteRouteImport } from './routes/$eventId/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as JoinEventIdRouteImport } from './routes/join/$eventId'
 import { Route as EventIdNewBillRouteImport } from './routes/$eventId/newBill'
 import { Route as EventIdBillhistoryRouteImport } from './routes/$eventId/billhistory'
 
 const UserRoute = UserRouteImport.update({
   id: '/user',
   path: '/user',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventIdRouteRoute = EventIdRouteRouteImport.update({
@@ -28,6 +41,11 @@ const EventIdRouteRoute = EventIdRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinEventIdRoute = JoinEventIdRouteImport.update({
+  id: '/join/$eventId',
+  path: '/join/$eventId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventIdNewBillRoute = EventIdNewBillRouteImport.update({
@@ -44,53 +62,74 @@ const EventIdBillhistoryRoute = EventIdBillhistoryRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$eventId': typeof EventIdRouteRouteWithChildren
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
   '/user': typeof UserRoute
   '/$eventId/billhistory': typeof EventIdBillhistoryRoute
   '/$eventId/newBill': typeof EventIdNewBillRoute
+  '/join/$eventId': typeof JoinEventIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$eventId': typeof EventIdRouteRouteWithChildren
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
   '/user': typeof UserRoute
   '/$eventId/billhistory': typeof EventIdBillhistoryRoute
   '/$eventId/newBill': typeof EventIdNewBillRoute
+  '/join/$eventId': typeof JoinEventIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$eventId': typeof EventIdRouteRouteWithChildren
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
   '/user': typeof UserRoute
   '/$eventId/billhistory': typeof EventIdBillhistoryRoute
   '/$eventId/newBill': typeof EventIdNewBillRoute
+  '/join/$eventId': typeof JoinEventIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/$eventId'
+    | '/login'
+    | '/signup'
     | '/user'
     | '/$eventId/billhistory'
     | '/$eventId/newBill'
+    | '/join/$eventId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/$eventId'
+    | '/login'
+    | '/signup'
     | '/user'
     | '/$eventId/billhistory'
     | '/$eventId/newBill'
+    | '/join/$eventId'
   id:
     | '__root__'
     | '/'
     | '/$eventId'
+    | '/login'
+    | '/signup'
     | '/user'
     | '/$eventId/billhistory'
     | '/$eventId/newBill'
+    | '/join/$eventId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   EventIdRouteRoute: typeof EventIdRouteRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  SignupRoute: typeof SignupRoute
   UserRoute: typeof UserRoute
+  JoinEventIdRoute: typeof JoinEventIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -100,6 +139,20 @@ declare module '@tanstack/react-router' {
       path: '/user'
       fullPath: '/user'
       preLoaderRoute: typeof UserRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$eventId': {
@@ -114,6 +167,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join/$eventId': {
+      id: '/join/$eventId'
+      path: '/join/$eventId'
+      fullPath: '/join/$eventId'
+      preLoaderRoute: typeof JoinEventIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$eventId/newBill': {
@@ -150,7 +210,10 @@ const EventIdRouteRouteWithChildren = EventIdRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   EventIdRouteRoute: EventIdRouteRouteWithChildren,
+  LoginRoute: LoginRoute,
+  SignupRoute: SignupRoute,
   UserRoute: UserRoute,
+  JoinEventIdRoute: JoinEventIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
