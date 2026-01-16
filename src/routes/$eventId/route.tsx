@@ -36,9 +36,9 @@ function EventLayout() {
         const eventSnap = await getDoc(eventRef);
 
         if (!eventSnap.exists()) {
-          console.log('Event nie istnieje');
+          console.log('Event nie istnieje:', eventId);
           setError('Event nie istnieje');
-          // navigate({ to: '/dupa' });
+          navigate({ to: '/' });
           return;
         }
 
@@ -46,21 +46,25 @@ function EventLayout() {
           id: eventSnap.id,
           ...(eventSnap.data() as { participants?: EventParticipant[] }),
         };
-        // console.log('EventData:', eventData);
+        console.log('EventData:', eventData);
+        console.log('Current user UID:', currentUser.uid);
 
         // Sprawdź czy użytkownik jest uczestnikiem
         const isParticipant = eventData.participants?.some(
           (p) => p.userId === (currentUser.uid as EventParticipant['userId'])
         );
+        console.log('Czy użytkownik jest uczestnikiem:', isParticipant);
 
         if (!isParticipant) {
           console.log('Użytkownik nie jest uczestnikiem tego eventu');
           setError('Nie masz dostępu do tego eventu');
-          // navigate({ to: '/' });
+          localStorage.removeItem('lastEventId'); // Usuń nieprawidłowy eventId
+          navigate({ to: '/' });
           return;
         }
 
         // Jeśli wszystko OK, ustaw event i zapisz do localStorage
+        console.log('Ustawiam event i zapisuję do localStorage:', eventData.id);
         setCurrentEvent(eventData as Event);
         localStorage.setItem('lastEventId', eventData.id);
         setLoading(false);

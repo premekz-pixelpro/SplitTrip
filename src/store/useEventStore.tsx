@@ -229,6 +229,15 @@ export const useEventStore = create<EventStore>((set, get) => ({
         };
       });
 
+      // Oblicz sumę wszystkich wartości rachunków
+      const totalSum = billsData.reduce((sum, bill) => sum + (bill.value || 0), 0);
+      console.log('fetchBills - liczba rachunków:', billsData.length);
+      console.log(
+        'fetchBills - wartości rachunków:',
+        billsData.map((b) => ({ title: b.title, value: b.value }))
+      );
+      console.log('fetchBills - SUMA WSZYSTKICH VALUE:', totalSum);
+
       set({ eventBills: billsData, loading: false });
     } catch (err) {
       set({

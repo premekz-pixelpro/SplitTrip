@@ -14,6 +14,7 @@ import { FirebaseUser } from '@/types/types';
 interface NewBillStore {
   title: string;
   value: number;
+  currency: string;
   participants: {
     userId: string;
     displayName: string;
@@ -27,11 +28,12 @@ interface NewBillStore {
   error: string | null;
   setTitle: (title: string) => void;
   setValue: (value: number) => void;
+  setCurrency: (currency: string) => void;
   setShare: (value: number) => void;
   addParticipant: (user: FirebaseUser) => void;
   removeParticipant: (userId: string) => void;
   markAsPaid: (userId: string) => void;
-  createBill: (currentUser: string, eventId: string) => Promise<void>;
+  createBill: (currentUser: string, eventId: string, valueInPLN?: number) => Promise<void>;
   reset: () => void;
 }
 
@@ -50,17 +52,28 @@ export const useNewBillStore = create<NewBillStore>((set, get) => {
   return {
     title: '',
     value: 0,
+    currency: 'PLN',
     participants: [],
     loading: false,
     error: null,
 
     setTitle: (title) => set({ title }),
     setValue: (value) => set({ value }),
+    setCurrency: (currency) => set({ currency }),
 
-    setShare: () =>
+    setShare: (value?: number) =>
       set((state) => {
+        // Użyj przekazanej wartości lub wartości ze stanu
+        const valueToUse = value ?? state.value;
         const numberOfParticipants = state.participants.length + 1; // +1 for the creator
-        const sharePerParticipant = calculateSharePerParticipant(state.value, numberOfParticipants);
+        const sharePerParticipant = calculateSharePerParticipant(valueToUse, numberOfParticipants);
+
+        console.log('setShare called with:', {
+          value,
+          valueToUse,
+          numberOfParticipants,
+          sharePerParticipant,
+        });
 
         return {
           participants: state.participants.map((p) => ({
@@ -104,18 +117,29 @@ export const useNewBillStore = create<NewBillStore>((set, get) => {
         participants: state.participants.filter((p) => p.userId !== userId),
       })),
 
-    createBill: async (currentUser: string, eventId: string) => {
+    createBill: async (currentUser: string, eventId: string, valueInPLN?: number) => {
       const state = get();
       set({ loading: true, error: null });
 
       try {
+        // Użyj przekazanej wartości w PLN lub oryginalnej wartości
+        const finalValue = valueInPLN ?? state.value;
+        console.log(
+          'Creating bill with value:',
+          finalValue,
+          'PLN (original:',
+          state.value,
+          state.currency,
+          ')'
+        );
+
         // Pobierz eventParticipants z useEventStore za pomocą getState()
         const eventState = useEventStore.getState();
         const eventParticipants = eventState.participants;
 
-        // Oblicz share dla wszystkich uczestników
+        // Oblicz share dla wszystkich uczestników - UŽYWAJ finalValue zamiast state.value!
         const numberOfParticipants = state.participants.length + 1; // +1 dla creatora
-        const sharePerParticipant = calculateSharePerParticipant(state.value, numberOfParticipants);
+        const sharePerParticipant = calculateSharePerParticipant(finalValue, numberOfParticipants);
 
         // Creator jest zawsze oznaczony jako zapłacony
         const creatorShare = formatShare(sharePerParticipant, true);
@@ -145,7 +169,8 @@ export const useNewBillStore = create<NewBillStore>((set, get) => {
         // Krok 1: Utwórz nowy dokument w kolekcji "bills"
         const billRef = await addDoc(collection(db, 'bills'), {
           title: state.title,
-          value: state.value,
+          value: finalValue, // Użyj przeliczonej wartości!
+          currency: 'PLN', // Zawsze zapisuj PLN
           creatorId: currentUser,
           participants: allParticipants,
           eventId,
@@ -190,6 +215,7 @@ export const useNewBillStore = create<NewBillStore>((set, get) => {
       set({
         title: '',
         value: 0,
+        currency: 'PLN',
         participants: [],
         error: null,
       }),

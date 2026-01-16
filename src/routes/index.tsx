@@ -12,7 +12,13 @@ function Index() {
   const { currentEvent, events, setCurrentEvent } = useEventStore();
 
   useEffect(() => {
-    // Sprawdź localStorage przy starcie
+    // Jeśli już jest wybrany event, przekieruj
+    if (currentEvent?.id) {
+      navigate({ to: `/${currentEvent.id}/newBill` });
+      return;
+    }
+
+    // Sprawdź localStorage tylko jeśli eventy są załadowane
     const lastEventId = localStorage.getItem('lastEventId');
 
     if (lastEventId && events.length > 0) {
@@ -20,13 +26,7 @@ function Index() {
       if (savedEvent) {
         setCurrentEvent(savedEvent);
         navigate({ to: `/${savedEvent.id}/newBill` });
-        return;
       }
-    }
-
-    // Jeśli jest jakiś wybrany event, przekieruj
-    if (currentEvent?.id) {
-      navigate({ to: `/${currentEvent.id}/newBill` });
     }
   }, [currentEvent, events, navigate, setCurrentEvent]);
 

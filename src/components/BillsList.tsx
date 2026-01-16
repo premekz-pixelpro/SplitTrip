@@ -31,7 +31,7 @@ export const BillsList = () => {
 
   useEffect(() => {
     if (currentEvent) fetchBills(currentEvent.id);
-  }, [currentEvent]);
+  }, [currentEvent?.id, fetchBills]);
 
   return (
     <div className="expenses-list">

@@ -67,7 +67,7 @@ function RootComponent() {
       )}
       <Outlet />
       <Footer />
-      <TanStackRouterDevtools position="top-right" />
+      {/* <TanStackRouterDevtools position="top-right" /> */}
       <Toaster position="top-right" reverseOrder={false} toastOptions={{ duration: 5000 }} />
     </>
   );

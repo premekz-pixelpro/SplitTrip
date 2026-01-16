@@ -3,11 +3,16 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { Button, Modal } from '@/components/';
 import { useEffect, useState } from 'react';
 
-export const AddParticipants = () => {
+interface AddParticipantsProps {
+  valueInPLN: number;
+}
+
+export const AddParticipants = ({ valueInPLN }: AddParticipantsProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { participants, fetchParticipants } = useEventStore();
   const currentUser = useAuthStore((state) => state.user);
   const billValue = useNewBillStore((state) => state.value);
+  const billCurrency = useNewBillStore((state) => state.currency);
   // const { availableUsers, fetchAvailableUsers } = useEventStore();
 
   // NewBillStore selections
@@ -23,8 +28,10 @@ export const AddParticipants = () => {
 
   useEffect(() => {
     fetchParticipants();
-    setShare(billValue);
-  }, [billValue, selectedParticipants.length, fetchParticipants, setShare]); // Recalculate share when value or participants change
+    // Przekazujemy przeliczoną wartość w PLN do setShare
+    console.log('AddParticipants - updating share with valueInPLN:', valueInPLN);
+    setShare(valueInPLN);
+  }, [valueInPLN, selectedParticipants.length, fetchParticipants, setShare]); // Używamy valueInPLN zamiast billValue
 
   // console.log('participants', selectedParticipants);
   const getShareColor = (share: number) => {
@@ -72,7 +79,7 @@ export const AddParticipants = () => {
             />
             <span>{participant.displayName}</span>
             <span style={{ color: getShareColor(participant.share) }}>
-              Share: {participant.share || 0}
+              Share: {Math.abs(participant.share).toFixed(2)} PLN
             </span>
             <label className="paying-label">
               <input
