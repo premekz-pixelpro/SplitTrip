@@ -20,6 +20,7 @@ export const NewBill = () => {
   const setBillValue = useNewBillStore((state) => state.setValue);
   const setBillCurrency = useNewBillStore((state) => state.setCurrency);
   const handleNewBill = useNewBillStore((state) => state.createBill);
+  // const calculateBalances = useEventStore((state) => state.calculateBalances);
 
   // Pobierz kurs waluty i przelicz na PLN
   useEffect(() => {
@@ -78,6 +79,7 @@ export const NewBill = () => {
       setBillTitle('');
       setBillValue(0);
       setBillCurrency('PLN');
+      // calculateBalances(currentEvent.id);
       console.log('Submit zakończony pomyślnie');
       toast.success(
         originalCurrency === 'PLN'

@@ -38,6 +38,7 @@ interface EventStore {
   loading: boolean;
   error: string | null;
   balances: Record<string, number>; // Added balances state
+  lastBalanceCalculation: Record<string, number>; // Dodaj cache timestamp
 
   // Event actions
 
@@ -61,6 +62,7 @@ interface EventStore {
   handleSnapshotError: (errorMessage: string) => void;
   handleSnapshotNotFound: () => void;
   addParticipantToEvent: (newParticipant: FirebaseUser) => Promise<FirebaseUser>;
+  addBill: (billData: Omit<Bill, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>; // Dodano typ dla billData
 }
 
 export const useEventStore = create<EventStore>((set, get) => ({
@@ -73,7 +75,7 @@ export const useEventStore = create<EventStore>((set, get) => ({
   loading: false,
   error: null,
   balances: {},
-  billsData: [],
+  lastBalanceCalculation: {},
 
   fetchEvents: async () => {
     set({ loading: true, error: null });
@@ -211,7 +213,6 @@ export const useEventStore = create<EventStore>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const billsRef = collection(db, 'bills');
-      // console.log("BillsRef", billsRef)
       const q = query(billsRef, where('eventId', '==', eventId));
       const querySnapshot = await getDocs(q);
       const billsData = querySnapshot.docs.map((doc) => {
@@ -222,23 +223,22 @@ export const useEventStore = create<EventStore>((set, get) => ({
           value: data.value || 0,
           creatorId: data.creatorId || '',
           eventId: data.eventId || '',
-          createdAt: data.createdAt, // Timestamp
-          updatedAt: data.updatedAt, // Timestamp
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
           participants: Array.isArray(data.participants) ? data.participants : [],
-          // Dodaj inne wymagane pola
         };
       });
 
-      // Oblicz sumę wszystkich wartości rachunków
-      const totalSum = billsData.reduce((sum, bill) => sum + (bill.value || 0), 0);
-      console.log('fetchBills - liczba rachunków:', billsData.length);
-      console.log(
-        'fetchBills - wartości rachunków:',
-        billsData.map((b) => ({ title: b.title, value: b.value }))
-      );
-      console.log('fetchBills - SUMA WSZYSTKICH VALUE:', totalSum);
+      const totalSum =
+        Math.round(billsData.reduce((sum, bill) => sum + (bill.value || 0), 0) * 100) / 100;
 
-      set({ eventBills: billsData, loading: false });
+      set((state) => ({
+        eventBills: billsData,
+        currentEvent: state.currentEvent
+          ? { ...state.currentEvent, totalExpenses: totalSum }
+          : state.currentEvent,
+        loading: false,
+      }));
     } catch (err) {
       set({
         error: err instanceof Error ? err.message : 'Error fetching bills',
@@ -366,99 +366,130 @@ export const useEventStore = create<EventStore>((set, get) => ({
   },
 
   calculateBalances: async (eventId: string) => {
+    console.log('🔵 START calculateBalances for event:', eventId);
+
     if (!eventId) {
-      console.error('Cannot calculate balances without eventId');
+      console.error('❌ Cannot calculate balances without eventId');
       return {};
+    }
+
+    const now = Date.now();
+    const lastCalc = get().lastBalanceCalculation[eventId] || 0;
+    if (now - lastCalc < 5000) {
+      console.log('⏭️ Skipping balance calculation - too soon');
+      return get().balances;
     }
 
     let calculatedBalances: Record<string, number> = {};
 
     try {
-      // 1. Pobierz wszystkie rachunki dla eventu
+      // 1. Pobierz rachunki
       const billsQuery = query(collection(db, 'bills'), where('eventId', '==', eventId));
-      // console.log("BillsQuery", billsQuery)
       const billsSnapshot = await getDocs(billsQuery);
       const bills = billsSnapshot.docs.map((doc) => doc.data() as Bill);
-      // console.log("BillsSnapshot", billsSnapshot)
-      // console.log("Bills", bills)
+      console.log('📋 Fetched bills:', bills.length);
+      console.table(
+        bills.map((b) => ({
+          title: b.title,
+          value: b.value,
+          participants: b.participants?.length,
+        }))
+      );
 
-      // 2. Pobierz aktualną listę ID uczestników z dokumentu wydarzenia (źródło prawdy o uczestnikach)
+      // 2. Pobierz uczestników
       const eventRef = doc(db, 'events', eventId);
       const eventSnap = await getDoc(eventRef);
       if (!eventSnap.exists()) {
-        throw new Error('Event document not found for balance calculation.');
+        throw new Error('Event document not found');
       }
       const eventData = eventSnap.data() as Event;
-      // Użyj nowszej struktury participants, jeśli taka jest
-      //Co jesli participant zostanie usunięty lub dodany?
-      const participantIds = (eventData.participants || []).map(
-        (p: { userId: string }) => p.userId
-      );
-      //  console.log("ParticipantIds", participantIds)
+      const participantIds = (eventData.participants || []).map((p) => p.userId);
+      console.log('👥 Participants:', participantIds);
 
-      calculatedBalances = participantIds?.reduce((acc: Record<string, number>, userId) => {
-        acc[userId] = 0; // Initialize balance for each user
+      // 3. Inicjalizuj balanse
+      calculatedBalances = participantIds.reduce((acc, userId) => {
+        acc[userId] = 0;
         return acc;
       }, {});
+      console.log('💰 Initial balances:', calculatedBalances);
 
-      // 4. Dla każdego rachunku, dodaj/odejmij share od odpowiedniego uczestnika
-      bills.forEach((bill) => {
+      // 4. Przelicz dla każdego rachunku
+      bills.forEach((bill, index) => {
+        console.log(`\n📝 Processing bill ${index + 1}: "${bill.title}" (${bill.value})`);
+
         if (bill.participants && Array.isArray(bill.participants)) {
-          // suma zapłaconych udziałów
           const paidAmount = bill.participants.reduce((sum, p) => {
             return sum + (p.hasPaid && !p.creator ? p.share || 0 : 0);
           }, 0);
+          console.log('  💵 Total paid by others:', paidAmount);
 
           bill.participants.forEach((participant) => {
             const userId = participant.userId;
+            const before = calculatedBalances[userId];
 
             if (Object.prototype.hasOwnProperty.call(calculatedBalances, userId)) {
               if (participant.creator) {
-                // Dla creatora: wartość rachunku minus jego udział minus suma zapłaconych udziałów
-                calculatedBalances[userId] +=
-                  Number((bill.value - participant.share - paidAmount).toFixed(1)) || 0;
-                // console.log("Creator balance update:", {
-                //   userId,
-                //   billValue: bill.value,
-                //   creatorShare: participant.share,
-                //   paidByOthers: paidAmount,
-                //   finalDelta: bill.value - participant.share - paidAmount
-                // });
+                const change = Number((bill.value - participant.share - paidAmount).toFixed(1));
+                calculatedBalances[userId] += change;
+                console.log(
+                  `  👤 ${userId} (creator): ${before} → ${calculatedBalances[userId]} (${change > 0 ? '+' : ''}${change})`
+                );
               } else {
-                // Dla pozostałych uczestników
-                if (participant.hasPaid) {
-                  // Jeśli już zapłacił, nie dodawaj do jego salda
-                  calculatedBalances[userId] += 0;
+                if (!participant.hasPaid) {
+                  const change = Number(participant.share.toFixed(1));
+                  calculatedBalances[userId] += change;
+                  console.log(
+                    `  👤 ${userId} (owes): ${before} → ${calculatedBalances[userId]} (+${change})`
+                  );
                 } else {
-                  // Jeśli nie zapłacił, dodaj jego udział jako dług
-                  calculatedBalances[userId] += Number(participant.share.toFixed(1)) || 0;
+                  console.log(`  👤 ${userId} (paid): no change`);
                 }
-                // console.log("Participant balance update:", {
-                //   userId,
-                //   hasPaid: participant.hasPaid,
-                //   share: participant.share
-                // });
               }
             }
           });
         }
       });
 
-      // 5. Zapisz obliczone salda z powrotem do dokumentu wydarzenia w Firestore
-      await updateDoc(eventRef, {
-        balances: calculatedBalances, // Zapisz całą mapę sald
-        updatedAt: serverTimestamp(), // Zaktualizuj czas modyfikacji
-      });
-      // 6. Zaktualizuj lokalny stan Zustand (opcjonalne, jeśli używasz listenerów Firestore)
-      set({ balances: calculatedBalances });
+      console.log('\n✅ FINAL BALANCES:', calculatedBalances);
 
-      // console.log("Balances calculated and updated in Firestore:", calculatedBalances);
-      return calculatedBalances; // Zwróć obliczone salda
+      // Zaokrąglij końcowe wartości do 2 miejsc po przecinku
+      Object.keys(calculatedBalances).forEach((key) => {
+        calculatedBalances[key] = Math.round(calculatedBalances[key] * 100) / 100;
+      });
+
+      console.log('✅ ROUNDED BALANCES:', calculatedBalances);
+
+      // 5. Sprawdź czy się zmieniły
+      const currentBalances = eventData.balances || {};
+      const hasChanged = Object.keys(calculatedBalances).some(
+        (key) => calculatedBalances[key] !== currentBalances[key]
+      );
+
+      console.log('🔄 Has changed:', hasChanged);
+      console.log('   Old:', currentBalances);
+      console.log('   New:', calculatedBalances);
+
+      if (hasChanged) {
+        await updateDoc(eventRef, {
+          balances: calculatedBalances,
+          updatedAt: serverTimestamp(),
+        });
+        console.log('💾 Saved to Firestore');
+      }
+
+      set({
+        balances: calculatedBalances,
+        lastBalanceCalculation: {
+          ...get().lastBalanceCalculation,
+          [eventId]: now,
+        },
+      });
+
+      return calculatedBalances;
     } catch (error) {
-      console.error('Error calculating and updating balances:', error);
-      // Rozważ ustawienie stanu błędu w Zustand
+      console.error('❌ Error calculating balances:', error);
       set({ error: error instanceof Error ? error.message : 'Error calculating balances' });
-      return calculatedBalances; // Zwróć ostatni znany stan sald (może być pusty)
+      return calculatedBalances;
     }
   },
   handleSnapshotUpdate: (updatedEventData) => {
@@ -503,6 +534,36 @@ export const useEventStore = create<EventStore>((set, get) => ({
     } catch (error) {
       console.error('Error adding participant to event:', error);
       throw error;
+    }
+  },
+  addBill: async (billData) => {
+    try {
+      // 1. Dodaj rachunek
+      await addDoc(collection(db, 'bills'), {
+        ...billData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      // 2. Pobierz wszystkie rachunki
+      await get().fetchBills(billData.eventId);
+
+      // 3. Oblicz i zaokrąglij totalExpenses
+      const totalSum =
+        Math.round(get().eventBills.reduce((sum, bill) => sum + (bill.value || 0), 0) * 100) / 100;
+
+      // 4. Zapisz do Firestore
+      const eventRef = doc(db, 'events', billData.eventId);
+      await updateDoc(eventRef, {
+        totalExpenses: totalSum,
+        updatedAt: serverTimestamp(),
+      });
+
+      // 5. Przelicz balances
+      await get().calculateBalances(billData.eventId);
+    } catch (err) {
+      console.error('Error adding bill:', err);
+      throw err;
     }
   },
 }));

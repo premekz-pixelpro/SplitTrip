@@ -10,6 +10,10 @@ export const BillsList = () => {
   const currentUser = useAuthStore((state) => state.user);
   const currentUserId = currentUser ? currentUser.uid : '';
 
+  console.log('BillsList - loading:', loading);
+  console.log('BillsList - eventBills:', eventBills);
+  console.log('BillsList - currentEvent:', currentEvent);
+
   // console.log('curentUserId', currentUserId);
 
   const sortedBills = [...eventBills].sort((a, b) => {
@@ -31,6 +35,7 @@ export const BillsList = () => {
 
   useEffect(() => {
     if (currentEvent) fetchBills(currentEvent.id);
+    console.log('Fetching bills for event:', currentEvent?.id);
   }, [currentEvent?.id, fetchBills]);
 
   return (

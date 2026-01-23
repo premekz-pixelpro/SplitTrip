@@ -12,6 +12,7 @@ export const EventSelector = () => {
     calculateBalances,
     fetchParticipants,
     fetchEventsByIds,
+    fetchBills,
   } = useEventStore();
 
   const { userProfile, loadingProfile, fetchUserProfile } = useUserProfileStore();
@@ -46,6 +47,16 @@ export const EventSelector = () => {
   if (loading || loadingProfile || isLoadingEvents) return <div>Loading events...</div>;
   if (error) return <div>Error: {error}</div>;
   if (!events.length) return <div>No events found</div>;
+
+  const onChange = async (eventId: string) => {
+    const event = events.find((e) => e.id === eventId);
+    if (event) {
+      setCurrentEvent(event);
+      await fetchBills(eventId);
+      // USUŃ to - balances będą zaktualizowane przez listener lub przy dodawaniu rachunku
+      // await calculateBalances(eventId);
+    }
+  };
 
   return (
     <div className="event-selector">

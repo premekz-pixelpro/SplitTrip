@@ -23,6 +23,9 @@ export const Footer = () => {
         <Link to="/user" className="[&.active]:font-bold">
           User
         </Link>
+        <Link to={`/${eventId}/billsTable`} className="[&.active]:font-bold">
+          📊
+        </Link>
       </div>
     </div>
   );

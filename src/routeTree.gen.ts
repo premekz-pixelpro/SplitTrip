@@ -16,6 +16,7 @@ import { Route as EventIdRouteRouteImport } from './routes/$eventId/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as JoinEventIdRouteImport } from './routes/join/$eventId'
 import { Route as EventIdNewBillRouteImport } from './routes/$eventId/newBill'
+import { Route as EventIdBillsTableRouteImport } from './routes/$eventId/billsTable'
 import { Route as EventIdBillhistoryRouteImport } from './routes/$eventId/billhistory'
 
 const UserRoute = UserRouteImport.update({
@@ -53,6 +54,11 @@ const EventIdNewBillRoute = EventIdNewBillRouteImport.update({
   path: '/newBill',
   getParentRoute: () => EventIdRouteRoute,
 } as any)
+const EventIdBillsTableRoute = EventIdBillsTableRouteImport.update({
+  id: '/billsTable',
+  path: '/billsTable',
+  getParentRoute: () => EventIdRouteRoute,
+} as any)
 const EventIdBillhistoryRoute = EventIdBillhistoryRouteImport.update({
   id: '/billhistory',
   path: '/billhistory',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/user': typeof UserRoute
   '/$eventId/billhistory': typeof EventIdBillhistoryRoute
+  '/$eventId/billsTable': typeof EventIdBillsTableRoute
   '/$eventId/newBill': typeof EventIdNewBillRoute
   '/join/$eventId': typeof JoinEventIdRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/user': typeof UserRoute
   '/$eventId/billhistory': typeof EventIdBillhistoryRoute
+  '/$eventId/billsTable': typeof EventIdBillsTableRoute
   '/$eventId/newBill': typeof EventIdNewBillRoute
   '/join/$eventId': typeof JoinEventIdRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/user': typeof UserRoute
   '/$eventId/billhistory': typeof EventIdBillhistoryRoute
+  '/$eventId/billsTable': typeof EventIdBillsTableRoute
   '/$eventId/newBill': typeof EventIdNewBillRoute
   '/join/$eventId': typeof JoinEventIdRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/user'
     | '/$eventId/billhistory'
+    | '/$eventId/billsTable'
     | '/$eventId/newBill'
     | '/join/$eventId'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/user'
     | '/$eventId/billhistory'
+    | '/$eventId/billsTable'
     | '/$eventId/newBill'
     | '/join/$eventId'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/user'
     | '/$eventId/billhistory'
+    | '/$eventId/billsTable'
     | '/$eventId/newBill'
     | '/join/$eventId'
   fileRoutesById: FileRoutesById
@@ -183,6 +195,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EventIdNewBillRouteImport
       parentRoute: typeof EventIdRouteRoute
     }
+    '/$eventId/billsTable': {
+      id: '/$eventId/billsTable'
+      path: '/billsTable'
+      fullPath: '/$eventId/billsTable'
+      preLoaderRoute: typeof EventIdBillsTableRouteImport
+      parentRoute: typeof EventIdRouteRoute
+    }
     '/$eventId/billhistory': {
       id: '/$eventId/billhistory'
       path: '/billhistory'
@@ -195,11 +214,13 @@ declare module '@tanstack/react-router' {
 
 interface EventIdRouteRouteChildren {
   EventIdBillhistoryRoute: typeof EventIdBillhistoryRoute
+  EventIdBillsTableRoute: typeof EventIdBillsTableRoute
   EventIdNewBillRoute: typeof EventIdNewBillRoute
 }
 
 const EventIdRouteRouteChildren: EventIdRouteRouteChildren = {
   EventIdBillhistoryRoute: EventIdBillhistoryRoute,
+  EventIdBillsTableRoute: EventIdBillsTableRoute,
   EventIdNewBillRoute: EventIdNewBillRoute,
 }
 
